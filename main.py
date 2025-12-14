@@ -3,6 +3,11 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
 
 st.set_page_config(
     page_title="Lucifero - Anime Streamer",
@@ -347,7 +352,7 @@ def get_anilist_trending():
     '''
     
     try:
-        response = requests.post('https://graphql.anilist.co', json={'query': anilist_query}, timeout=10)
+        response = requests.post(os.getenv('ANI_LIST_API_URL'), json={'query': anilist_query}, timeout=10)
         response.raise_for_status()
         data = response.json().get('data', {}).get('Page', {}).get('media', [])
         
@@ -371,7 +376,7 @@ def get_anilist_trending():
 def search_gogoanime(title):
     try:
         search_title = re.sub(r'[^\w\s]', '', title).strip()
-        search_url = f"https://gogoanime.com.by/search?keyword={search_title.replace(' ', '+')}"
+        search_url = f"{os.getenv('GOGO_ANIME_BASE_URL')}/search?keyword={search_title.replace(' ', '+')}"
         
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
@@ -388,7 +393,7 @@ def search_gogoanime(title):
             if first_result and first_result.get('href'):
                 anime_url = first_result['href']
                 if anime_url.startswith('/'):
-                    anime_url = "https://gogoanime.com.by" + anime_url
+                    anime_url = os.getenv('GOGO_ANIME_BASE_URL') + anime_url
                 
                 anime_id_match = re.search(r'/([^/]+-\d+)$', anime_url)
                 if anime_id_match:
@@ -398,10 +403,10 @@ def search_gogoanime(title):
         return None
 
 def get_episodes_from_api(anime_id):
-    api_url = f"https://gogoanime.com.by/get_episodes?id={anime_id}"
+    api_url = f"{os.getenv('GOGO_ANIME_BASE_URL')}/get_episodes?id={anime_id}"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Referer": f"https://gogoanime.com.by/anime/{anime_id}"
+        "Referer": f"{os.getenv('GOGO_ANIME_BASE_URL')}/anime/{anime_id}"
     }
     try:
         response = requests.get(api_url, headers=headers, timeout=10)
@@ -415,7 +420,7 @@ def get_episodes_from_api(anime_id):
         return []
 
 def search_anime(anime_name):
-    search_url = f"https://gogoanime.com.by/search?keyword={anime_name.replace(' ', '+')}"
+    search_url = f"{os.getenv('GOGO_ANIME_BASE_URL')}/search?keyword={anime_name.replace(' ', '+')}"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
@@ -435,7 +440,7 @@ def search_anime(anime_name):
         if first_result and first_result.get('href'):
             anime_url = first_result['href']
             if anime_url.startswith('/'):
-                anime_url = "https://gogoanime.com.by" + anime_url
+                anime_url = os.getenv('GOGO_ANIME_BASE_URL') + anime_url
             
             anime_id_match = re.search(r'/([^/]+-\d+)$', anime_url)
             if anime_id_match:
@@ -457,7 +462,7 @@ def search_anime(anime_name):
     return search_results
 
 def get_streaming_url(anime_id, episode_id):
-    return f"https://gogoanime.com.by/streaming.php?id={anime_id}&ep={episode_id}&server=hd-1&type=sub"
+    return f"{os.getenv('GOGO_ANIME_BASE_URL')}/streaming.php?id={anime_id}&ep={episode_id}&server=hd-1&type=sub"
 
 if st.session_state.current_page == 'trending':
     st.markdown('<div class="section-header">TRENDING ANIME</div>', unsafe_allow_html=True)
