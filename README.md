@@ -29,13 +29,13 @@ This application requires certain environment variables to function properly. To
    cp .env.example .env
    ```
 
-2. Edit the `.env` file and replace the placeholder values with your actual API endpoints:
+2. Edit the `.env` file and replace the placeholder values with the actual API endpoints:
    ```
-   ANI_LIST_API_URL=your_anilist_api_endpoint_here
-   GOGO_ANIME_BASE_URL=your_gogoanime_base_url_here
+   ANI_LIST_API_URL=https://graphql.anilist.co
+   GOGO_ANIME_BASE_URL=https://gogoanime.com.by
    ```
 
-**Important:** The `.env` file is included in `.gitignore` and will not be committed to the repository, keeping your credentials secure.
+**Important:** The `.env` file is included in `.gitignore` and will not be committed to the repository, keeping your configuration secure.
 
 ## Running the Application
 
@@ -53,8 +53,8 @@ streamlit run main.py
 3. Connect your GitHub repository
 4. Select `main.py` as the entry point
 5. Add the required environment variables in the Secrets section:
-   - `ANI_LIST_API_URL` = `your_anilist_api_endpoint_here`
-   - `GOGO_ANIME_BASE_URL` = `your_gogoanime_base_url_here`
+   - `ANI_LIST_API_URL` = `https://graphql.anilist.co`
+   - `GOGO_ANIME_BASE_URL` = `https://gogoanime.com.by`
 6. Deploy the app
 
 ### Heroku Deployment:
@@ -66,8 +66,8 @@ streamlit run main.py
    ```
 3. Set the environment variables:
    ```
-   heroku config:set ANI_LIST_API_URL=your_anilist_api_endpoint_here
-   heroku config:set GOGO_ANIME_BASE_URL=your_gogoanime_base_url_here
+   heroku config:set ANI_LIST_API_URL=https://graphql.anilist.co
+   heroku config:set GOGO_ANIME_BASE_URL=https://gogoanime.com.by
    ```
 4. Deploy the app:
    ```
