@@ -22,12 +22,7 @@ All required packages are listed in `requirements.txt`.
 
 ## Environment Variables
 
-This application uses environment variables for API endpoints. Copy the `.env.example` file to `.env` and update the values:
-
-```
-ANI_LIST_API_URL=https://graphql.anilist.co
-GOGO_ANIME_BASE_URL=https://gogoanime.com.by
-```
+This application uses environment variables for API endpoints. Copy the `.env.example` file to `.env` and update the values with your own endpoints.
 
 ## Running the Application
 
