@@ -9,6 +9,13 @@ import os
 # Load environment variables
 load_dotenv()
 
+# Set default values for environment variables if not present
+if not os.getenv('ANI_LIST_API_URL'):
+    os.environ['ANI_LIST_API_URL'] = 'https://graphql.anilist.co'
+    
+if not os.getenv('GOGO_ANIME_BASE_URL'):
+    os.environ['GOGO_ANIME_BASE_URL'] = 'https://gogoanime.com.by'
+
 st.set_page_config(
     page_title="Lucifero - Anime Streamer",
     page_icon=":imp:",
