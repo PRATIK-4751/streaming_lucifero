@@ -20,6 +20,15 @@ All required packages are listed in `requirements.txt`.
    pip install -r requirements.txt
    ```
 
+## Environment Variables
+
+This application uses environment variables for API endpoints. Copy the `.env.example` file to `.env` and update the values:
+
+```
+ANI_LIST_API_URL=https://graphql.anilist.co
+GOGO_ANIME_BASE_URL=https://gogoanime.com.by
+```
+
 ## Running the Application
 
 To run the Streamlit app locally:
@@ -40,4 +49,5 @@ For Streamlit Cloud deployment:
 2. Visit [Streamlit Cloud](https://streamlit.io/cloud)
 3. Connect your GitHub repository
 4. Select `main.py` as the entry point
-5. Deploy the app
+5. Add the required environment variables in the Secrets section
+6. Deploy the app
