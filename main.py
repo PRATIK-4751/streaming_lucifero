@@ -11,7 +11,7 @@ load_dotenv()
 
 st.set_page_config(
     page_title="Lucifero - Anime Streamer",
-    page_icon="👿",
+    page_icon=":imp:",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
