@@ -358,8 +358,14 @@ def get_anilist_trending():
     }
     '''
     
+    # Get the API URL with a fallback
+    api_url = os.getenv('ANI_LIST_API_URL')
+    if not api_url:
+        st.error("ANI_LIST_API_URL environment variable is not set")
+        return []
+    
     try:
-        response = requests.post(os.getenv('ANI_LIST_API_URL'), json={'query': anilist_query}, timeout=10)
+        response = requests.post(api_url, json={'query': anilist_query}, timeout=10)
         response.raise_for_status()
         data = response.json().get('data', {}).get('Page', {}).get('media', [])
         
@@ -381,9 +387,15 @@ def get_anilist_trending():
         return []
 
 def search_gogoanime(title):
+    # Check if the base URL is set
+    base_url = os.getenv('GOGO_ANIME_BASE_URL')
+    if not base_url:
+        st.error("GOGO_ANIME_BASE_URL environment variable is not set")
+        return None
+        
     try:
         search_title = re.sub(r'[^\w\s]', '', title).strip()
-        search_url = f"{os.getenv('GOGO_ANIME_BASE_URL')}/search?keyword={search_title.replace(' ', '+')}"
+        search_url = f"{base_url}/search?keyword={search_title.replace(' ', '+')}"
         
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
@@ -400,7 +412,7 @@ def search_gogoanime(title):
             if first_result and first_result.get('href'):
                 anime_url = first_result['href']
                 if anime_url.startswith('/'):
-                    anime_url = os.getenv('GOGO_ANIME_BASE_URL') + anime_url
+                    anime_url = base_url + anime_url
                 
                 anime_id_match = re.search(r'/([^/]+-\d+)$', anime_url)
                 if anime_id_match:
@@ -410,10 +422,16 @@ def search_gogoanime(title):
         return None
 
 def get_episodes_from_api(anime_id):
-    api_url = f"{os.getenv('GOGO_ANIME_BASE_URL')}/get_episodes?id={anime_id}"
+    # Check if the base URL is set
+    base_url = os.getenv('GOGO_ANIME_BASE_URL')
+    if not base_url:
+        st.error("GOGO_ANIME_BASE_URL environment variable is not set")
+        return []
+    
+    api_url = f"{base_url}/get_episodes?id={anime_id}"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Referer": f"{os.getenv('GOGO_ANIME_BASE_URL')}/anime/{anime_id}"
+        "Referer": f"{base_url}/anime/{anime_id}"
     }
     try:
         response = requests.get(api_url, headers=headers, timeout=10)
@@ -427,7 +445,13 @@ def get_episodes_from_api(anime_id):
         return []
 
 def search_anime(anime_name):
-    search_url = f"{os.getenv('GOGO_ANIME_BASE_URL')}/search?keyword={anime_name.replace(' ', '+')}"
+    # Check if the base URL is set
+    base_url = os.getenv('GOGO_ANIME_BASE_URL')
+    if not base_url:
+        st.error("GOGO_ANIME_BASE_URL environment variable is not set")
+        return []
+        
+    search_url = f"{base_url}/search?keyword={anime_name.replace(' ', '+')}"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
@@ -447,7 +471,7 @@ def search_anime(anime_name):
         if first_result and first_result.get('href'):
             anime_url = first_result['href']
             if anime_url.startswith('/'):
-                anime_url = os.getenv('GOGO_ANIME_BASE_URL') + anime_url
+                anime_url = base_url + anime_url
             
             anime_id_match = re.search(r'/([^/]+-\d+)$', anime_url)
             if anime_id_match:
@@ -469,7 +493,13 @@ def search_anime(anime_name):
     return search_results
 
 def get_streaming_url(anime_id, episode_id):
-    return f"{os.getenv('GOGO_ANIME_BASE_URL')}/streaming.php?id={anime_id}&ep={episode_id}&server=hd-1&type=sub"
+    # Check if the base URL is set
+    base_url = os.getenv('GOGO_ANIME_BASE_URL')
+    if not base_url:
+        st.error("GOGO_ANIME_BASE_URL environment variable is not set")
+        return None
+        
+    return f"{base_url}/streaming.php?id={anime_id}&ep={episode_id}&server=hd-1&type=sub"
 
 if st.session_state.current_page == 'trending':
     st.markdown('<div class="section-header">TRENDING ANIME</div>', unsafe_allow_html=True)
