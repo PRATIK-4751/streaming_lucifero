@@ -3,16 +3,15 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
-import os
 
-# Streamlit Cloud uses st.secrets, not .env files
-# For local development, fall back to environment variables
+# SECURE: Get API endpoints from Streamlit secrets ONLY
+# These will NEVER be visible in the code or to users
 try:
-    ANI_LIST_API_URL = st.secrets.get("ANI_LIST_API_URL", "https://graphql.anilist.co")
-    GOGO_ANIME_BASE_URL = st.secrets.get("GOGO_ANIME_BASE_URL", "https://gogoanime.com.by")
-except:
-    ANI_LIST_API_URL = os.getenv('ANI_LIST_API_URL', 'https://graphql.anilist.co')
-    GOGO_ANIME_BASE_URL = os.getenv('GOGO_ANIME_BASE_URL', 'https://gogoanime.com.by')
+    ANI_LIST_API_URL = st.secrets["ANI_LIST_API_URL"]
+    GOGO_ANIME_BASE_URL = st.secrets["GOGO_ANIME_BASE_URL"]
+except Exception as e:
+    st.error("⚠️ Configuration error. Please contact the administrator.")
+    st.stop()
 
 st.set_page_config(
     page_title="Lucifero - Anime Streamer",
@@ -345,6 +344,7 @@ with nav_cols[2]:
 st.markdown("---")
 
 def get_anilist_trending():
+    """Fetch trending anime from AniList API"""
     anilist_query = '''
     query {
         Page(page: 1, perPage: 24) {
@@ -393,13 +393,14 @@ def get_anilist_trending():
         st.error("⏱️ Request timed out. Please try again.")
         return []
     except requests.exceptions.RequestException as e:
-        st.error(f"❌ Network error: {str(e)}")
+        st.error("❌ Network error. Please check your connection.")
         return []
     except Exception as e:
-        st.error(f"❌ Error loading trending anime: {str(e)}")
+        st.error("❌ Error loading trending anime. Please try again later.")
         return []
 
 def search_gogoanime(title):
+    """Search for anime on streaming server"""
     try:
         search_title = re.sub(r'[^\w\s]', '', title).strip()
         search_url = f"{GOGO_ANIME_BASE_URL}/search?keyword={search_title.replace(' ', '+')}"
@@ -429,16 +430,14 @@ def search_gogoanime(title):
                     return anime_id_match.group(1)
         return None
     except requests.exceptions.Timeout:
-        st.error("⏱️ Search timed out. The streaming server may be slow.")
-        return None
-    except requests.exceptions.RequestException as e:
-        st.error(f"❌ Network error while searching: {str(e)}")
+        st.error("⏱️ Search timed out. Please try again.")
         return None
     except Exception as e:
-        st.error(f"❌ Error searching anime: {str(e)}")
+        st.error("❌ Search failed. Please try again later.")
         return None
 
 def get_episodes_from_api(anime_id):
+    """Fetch episode list for an anime"""
     api_url = f"{GOGO_ANIME_BASE_URL}/get_episodes?id={anime_id}"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -452,17 +451,12 @@ def get_episodes_from_api(anime_id):
         if not data.get('success', False) or not data.get('episodes'):
             return []
         return data['episodes']
-    except requests.exceptions.Timeout:
-        st.error("⏱️ Episode loading timed out.")
-        return []
-    except requests.exceptions.RequestException as e:
-        st.error(f"❌ Network error loading episodes: {str(e)}")
-        return []
     except Exception as e:
-        st.error(f"❌ Error loading episodes: {str(e)}")
+        st.error("❌ Failed to load episodes.")
         return []
 
 def search_anime(anime_name):
+    """Search anime by name"""
     search_url = f"{GOGO_ANIME_BASE_URL}/search?keyword={anime_name.replace(' ', '+')}"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -473,7 +467,7 @@ def search_anime(anime_name):
         response = requests.get(search_url, headers=headers, timeout=15)
         response.raise_for_status()
     except Exception as e:
-        st.error(f"❌ Search error: {str(e)}")
+        st.error("❌ Search failed. Please try again.")
         return []
     
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -507,6 +501,7 @@ def search_anime(anime_name):
     return search_results
 
 def get_streaming_url(anime_id, episode_id):
+    """Generate streaming URL for an episode"""
     return f"{GOGO_ANIME_BASE_URL}/streaming.php?id={anime_id}&ep={episode_id}&server=hd-1&type=sub"
 
 # TRENDING PAGE
