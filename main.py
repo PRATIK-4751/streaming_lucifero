@@ -3,27 +3,25 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
-from dotenv import load_dotenv
 import os
 
-# Load environment variables
-load_dotenv()
-
-# Check if required environment variables are set and show info if using defaults
-ani_list_url = os.getenv('ANI_LIST_API_URL')
-gogo_anime_url = os.getenv('GOGO_ANIME_BASE_URL')
-
-# Show a subtle info message if using default values
-if not ani_list_url or not gogo_anime_url:
-    st.info("Using default API endpoints. To customize, set ANI_LIST_API_URL and GOGO_ANIME_BASE_URL environment variables.")
+# Streamlit Cloud uses st.secrets, not .env files
+# For local development, fall back to environment variables
+try:
+    ANI_LIST_API_URL = st.secrets.get("ANI_LIST_API_URL", "https://graphql.anilist.co")
+    GOGO_ANIME_BASE_URL = st.secrets.get("GOGO_ANIME_BASE_URL", "https://gogoanime.com.by")
+except:
+    ANI_LIST_API_URL = os.getenv('ANI_LIST_API_URL', 'https://graphql.anilist.co')
+    GOGO_ANIME_BASE_URL = os.getenv('GOGO_ANIME_BASE_URL', 'https://gogoanime.com.by')
 
 st.set_page_config(
     page_title="Lucifero - Anime Streamer",
-    page_icon=":imp:",
+    page_icon="👹",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
+# Initialize session state
 if 'theme' not in st.session_state:
     st.session_state.theme = 'dark'
 if 'anime_data' not in st.session_state:
@@ -271,6 +269,15 @@ st.markdown(f"""
         border-color: {current_theme['accent']};
     }}
     
+    .error-box {{
+        background: rgba(255, 68, 68, 0.1);
+        border: 2px solid {current_theme['accent']};
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: center;
+    }}
+    
     @media (max-width: 768px) {{
         .anime-card {{
             margin: 8px 0;
@@ -308,7 +315,7 @@ st.markdown(f"""
 ascii_art = """
     ⟨⟨ 𝕷𝖀𝕮𝕴𝕱𝕰𝕽𝕺 ⟩⟩
     
-    ▓▓▓▒▒░░ ANIME STREAMER ░░▒▒▓▓▓
+    ▓▓▓▒▒▒▒ ANIME STREAMER ▒▒▒▒▓▓▓
 """
 
 st.markdown(f'<div class="ascii-art">{ascii_art}</div>', unsafe_allow_html=True)
@@ -317,21 +324,21 @@ st.markdown('<div class="subtitle">Il Diavolo dell\'Anime</div>', unsafe_allow_h
 
 col_toggle1, col_toggle2, col_toggle3 = st.columns([4, 1, 4])
 with col_toggle2:
-    if st.button("THEME", key="theme_toggle"):
+    if st.button("🌓 THEME", key="theme_toggle"):
         st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
         st.rerun()
 
 nav_cols = st.columns(3)
 with nav_cols[0]:
-    if st.button("TRENDING", key="nav_trending", use_container_width=True):
+    if st.button("🔥 TRENDING", key="nav_trending", use_container_width=True):
         st.session_state.current_page = 'trending'
         st.rerun()
 with nav_cols[1]:
-    if st.button("SEARCH", key="nav_search", use_container_width=True):
+    if st.button("🔍 SEARCH", key="nav_search", use_container_width=True):
         st.session_state.current_page = 'search'
         st.rerun()
 with nav_cols[2]:
-    if st.button("PLAYER", key="nav_player", use_container_width=True):
+    if st.button("▶️ PLAYER", key="nav_player", use_container_width=True):
         st.session_state.current_page = 'player'
         st.rerun()
 
@@ -359,11 +366,13 @@ def get_anilist_trending():
     }
     '''
     
-    # Get the API URL from environment variable with fallback to default
-    api_url = os.getenv('ANI_LIST_API_URL', 'https://graphql.anilist.co')
-    
     try:
-        response = requests.post(api_url, json={'query': anilist_query}, timeout=10)
+        response = requests.post(
+            ANI_LIST_API_URL, 
+            json={'query': anilist_query}, 
+            timeout=15,
+            headers={'Content-Type': 'application/json'}
+        )
         response.raise_for_status()
         data = response.json().get('data', {}).get('Page', {}).get('media', [])
         
@@ -380,23 +389,29 @@ def get_anilist_trending():
             })
         
         return trending
+    except requests.exceptions.Timeout:
+        st.error("⏱️ Request timed out. Please try again.")
+        return []
+    except requests.exceptions.RequestException as e:
+        st.error(f"❌ Network error: {str(e)}")
+        return []
     except Exception as e:
-        st.error(f"Error loading trending anime: {str(e)}")
+        st.error(f"❌ Error loading trending anime: {str(e)}")
         return []
 
 def search_gogoanime(title):
-    # Check if the base URL is set with fallback to default
-    base_url = os.getenv('GOGO_ANIME_BASE_URL', 'https://gogoanime.com.by')
-        
     try:
         search_title = re.sub(r'[^\w\s]', '', title).strip()
-        search_url = f"{base_url}/search?keyword={search_title.replace(' ', '+')}"
+        search_url = f"{GOGO_ANIME_BASE_URL}/search?keyword={search_title.replace(' ', '+')}"
         
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Referer": GOGO_ANIME_BASE_URL
         }
         
-        response = requests.get(search_url, headers=headers, timeout=10)
+        response = requests.get(search_url, headers=headers, timeout=15)
         response.raise_for_status()
         
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -407,48 +422,58 @@ def search_gogoanime(title):
             if first_result and first_result.get('href'):
                 anime_url = first_result['href']
                 if anime_url.startswith('/'):
-                    anime_url = base_url + anime_url
+                    anime_url = GOGO_ANIME_BASE_URL + anime_url
                 
                 anime_id_match = re.search(r'/([^/]+-\d+)$', anime_url)
                 if anime_id_match:
                     return anime_id_match.group(1)
         return None
-    except:
+    except requests.exceptions.Timeout:
+        st.error("⏱️ Search timed out. The streaming server may be slow.")
+        return None
+    except requests.exceptions.RequestException as e:
+        st.error(f"❌ Network error while searching: {str(e)}")
+        return None
+    except Exception as e:
+        st.error(f"❌ Error searching anime: {str(e)}")
         return None
 
 def get_episodes_from_api(anime_id):
-    # Check if the base URL is set with fallback to default
-    base_url = os.getenv('GOGO_ANIME_BASE_URL', 'https://gogoanime.com.by')
-    
-    api_url = f"{base_url}/get_episodes?id={anime_id}"
+    api_url = f"{GOGO_ANIME_BASE_URL}/get_episodes?id={anime_id}"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Referer": f"{base_url}/anime/{anime_id}"
+        "Referer": f"{GOGO_ANIME_BASE_URL}/anime/{anime_id}",
+        "Accept": "application/json"
     }
     try:
-        response = requests.get(api_url, headers=headers, timeout=10)
+        response = requests.get(api_url, headers=headers, timeout=15)
         response.raise_for_status()
         data = response.json()
         if not data.get('success', False) or not data.get('episodes'):
             return []
         return data['episodes']
+    except requests.exceptions.Timeout:
+        st.error("⏱️ Episode loading timed out.")
+        return []
+    except requests.exceptions.RequestException as e:
+        st.error(f"❌ Network error loading episodes: {str(e)}")
+        return []
     except Exception as e:
-        st.error(f"Error loading episodes: {str(e)}")
+        st.error(f"❌ Error loading episodes: {str(e)}")
         return []
 
 def search_anime(anime_name):
-    # Check if the base URL is set with fallback to default
-    base_url = os.getenv('GOGO_ANIME_BASE_URL', 'https://gogoanime.com.by')
-        
-    search_url = f"{base_url}/search?keyword={anime_name.replace(' ', '+')}"
+    search_url = f"{GOGO_ANIME_BASE_URL}/search?keyword={anime_name.replace(' ', '+')}"
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Referer": GOGO_ANIME_BASE_URL
     }
     try:
-        response = requests.get(search_url, headers=headers, timeout=10)
+        response = requests.get(search_url, headers=headers, timeout=15)
         response.raise_for_status()
     except Exception as e:
-        st.error(f"Search error: {str(e)}")
+        st.error(f"❌ Search error: {str(e)}")
         return []
     
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -460,7 +485,7 @@ def search_anime(anime_name):
         if first_result and first_result.get('href'):
             anime_url = first_result['href']
             if anime_url.startswith('/'):
-                anime_url = base_url + anime_url
+                anime_url = GOGO_ANIME_BASE_URL + anime_url
             
             anime_id_match = re.search(r'/([^/]+-\d+)$', anime_url)
             if anime_id_match:
@@ -482,16 +507,14 @@ def search_anime(anime_name):
     return search_results
 
 def get_streaming_url(anime_id, episode_id):
-    # Check if the base URL is set with fallback to default
-    base_url = os.getenv('GOGO_ANIME_BASE_URL', 'https://gogoanime.com.by')
-        
-    return f"{base_url}/streaming.php?id={anime_id}&ep={episode_id}&server=hd-1&type=sub"
+    return f"{GOGO_ANIME_BASE_URL}/streaming.php?id={anime_id}&ep={episode_id}&server=hd-1&type=sub"
 
+# TRENDING PAGE
 if st.session_state.current_page == 'trending':
     st.markdown('<div class="section-header">TRENDING ANIME</div>', unsafe_allow_html=True)
     
     if not st.session_state.trending_anime:
-        with st.spinner("Loading trending anime..."):
+        with st.spinner("🔄 Loading trending anime..."):
             st.session_state.trending_anime = get_anilist_trending()
     
     if st.session_state.trending_anime:
@@ -510,7 +533,7 @@ if st.session_state.current_page == 'trending':
                             <div class="anime-info">
                                 <div class="anime-title">{anime['title']}</div>
                                 <div class="anime-meta">
-                                    <span class="score-badge">Score: {anime.get('score', 'N/A')}</span><br>
+                                    <span class="score-badge">⭐ {anime.get('score', 'N/A')}</span><br>
                                     Episodes: {anime.get('episodes', 'N/A')}<br>
                                     Status: {anime.get('status', 'N/A')}
                                 </div>
@@ -518,8 +541,8 @@ if st.session_state.current_page == 'trending':
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        if st.button("STREAM", key=f"trending_{i}_{j}"):
-                            with st.spinner("Connecting to server..."):
+                        if st.button("▶️ STREAM", key=f"trending_{i}_{j}"):
+                            with st.spinner("🔄 Connecting to server..."):
                                 anime_id = search_gogoanime(anime['title'])
                                 if anime_id:
                                     st.session_state.selected_anime = {
@@ -531,8 +554,16 @@ if st.session_state.current_page == 'trending':
                                     st.session_state.current_page = 'player'
                                     st.rerun()
                                 else:
-                                    st.error("Anime not found on streaming server")
+                                    st.error("❌ Anime not found on streaming server")
+    else:
+        st.markdown("""
+        <div class="error-box">
+            <h3>⚠️ Unable to load trending anime</h3>
+            <p>Please check your internet connection and try refreshing the page.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
+# SEARCH PAGE
 elif st.session_state.current_page == 'search':
     st.markdown('<div class="section-header">SEARCH ANIME</div>', unsafe_allow_html=True)
     
@@ -540,15 +571,15 @@ elif st.session_state.current_page == 'search':
     with col1:
         search_term = st.text_input("", placeholder="Enter anime name...", label_visibility="collapsed")
     with col2:
-        search_btn = st.button("SEARCH", use_container_width=True)
+        search_btn = st.button("🔍 SEARCH", use_container_width=True)
     
     if search_btn and search_term:
-        with st.spinner("Searching..."):
+        with st.spinner("🔄 Searching..."):
             results = search_anime(search_term)
             st.session_state.search_results = results
     
     if st.session_state.search_results:
-        st.markdown(f'<div class="section-header">{len(st.session_state.search_results)} RESULTS FOUND</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="section-header">📊 {len(st.session_state.search_results)} RESULTS FOUND</div>', unsafe_allow_html=True)
         
         cols_per_row = 4
         for i in range(0, len(st.session_state.search_results), cols_per_row):
@@ -568,12 +599,13 @@ elif st.session_state.current_page == 'search':
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        if st.button("SELECT", key=f"select_{i}_{j}"):
+                        if st.button("✅ SELECT", key=f"select_{i}_{j}"):
                             st.session_state.selected_anime = result
                             st.session_state.anime_data = get_episodes_from_api(result['anime_id'])
                             st.session_state.current_page = 'player'
                             st.rerun()
 
+# PLAYER PAGE
 elif st.session_state.current_page == 'player':
     if st.session_state.streaming_url:
         st.markdown('<div class="section-header">NOW STREAMING</div>', unsafe_allow_html=True)
@@ -584,7 +616,7 @@ elif st.session_state.current_page == 'player':
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button("CLOSE PLAYER"):
+        if st.button("❌ CLOSE PLAYER"):
             st.session_state.streaming_url = None
             st.rerun()
         st.markdown("---")
@@ -593,7 +625,7 @@ elif st.session_state.current_page == 'player':
         st.markdown(f'<div class="section-header">{st.session_state.selected_anime["title"]}</div>', unsafe_allow_html=True)
         
         if st.session_state.anime_data:
-            st.markdown(f'<div class="anime-meta" style="text-align: center; margin: 20px 0; font-size: clamp(14px, 2vw, 16px);">AVAILABLE EPISODES: {len(st.session_state.anime_data)}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="anime-meta" style="text-align: center; margin: 20px 0; font-size: clamp(14px, 2vw, 16px);">📺 AVAILABLE EPISODES: {len(st.session_state.anime_data)}</div>', unsafe_allow_html=True)
             
             eps_per_row = 6
             for i in range(0, len(st.session_state.anime_data), eps_per_row):
@@ -607,13 +639,18 @@ elif st.session_state.current_page == 'player':
                                 st.session_state.streaming_url = get_streaming_url(anime_id, episode['s_id'])
                                 st.rerun()
         else:
-            st.info("Loading episodes...")
+            st.markdown("""
+            <div class="error-box">
+                <h3>⚠️ No episodes available</h3>
+                <p>This anime may not be available for streaming yet.</p>
+            </div>
+            """, unsafe_allow_html=True)
     else:
-        st.info("Select an anime to start watching")
+        st.info("👈 Select an anime from Trending or Search to start watching")
 
 st.markdown("---")
 st.markdown(f"""
 <div style="text-align: center; font-family: 'Libre Baskerville', serif; opacity: 0.6; margin: 30px 0; font-size: clamp(12px, 2vw, 14px);">
-    LUCIFERO - 2024
+    LUCIFERO © 2024 | Made with ❤️ for Anime Fans
 </div>
 """, unsafe_allow_html=True)
