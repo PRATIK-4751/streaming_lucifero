@@ -9,13 +9,6 @@ import os
 # Load environment variables
 load_dotenv()
 
-# Set default values for environment variables if not present
-if not os.getenv('ANI_LIST_API_URL'):
-    os.environ['ANI_LIST_API_URL'] = 'https://graphql.anilist.co'
-    
-if not os.getenv('GOGO_ANIME_BASE_URL'):
-    os.environ['GOGO_ANIME_BASE_URL'] = 'https://gogoanime.com.by'
-
 st.set_page_config(
     page_title="Lucifero - Anime Streamer",
     page_icon=":imp:",
@@ -358,10 +351,10 @@ def get_anilist_trending():
     }
     '''
     
-    # Get the API URL with a fallback
+    # Get the API URL from environment variable
     api_url = os.getenv('ANI_LIST_API_URL')
     if not api_url:
-        st.error("ANI_LIST_API_URL environment variable is not set")
+        st.error("ANI_LIST_API_URL environment variable is not set. Please check your .env file.")
         return []
     
     try:
@@ -390,7 +383,7 @@ def search_gogoanime(title):
     # Check if the base URL is set
     base_url = os.getenv('GOGO_ANIME_BASE_URL')
     if not base_url:
-        st.error("GOGO_ANIME_BASE_URL environment variable is not set")
+        st.error("GOGO_ANIME_BASE_URL environment variable is not set. Please check your .env file.")
         return None
         
     try:
@@ -425,7 +418,7 @@ def get_episodes_from_api(anime_id):
     # Check if the base URL is set
     base_url = os.getenv('GOGO_ANIME_BASE_URL')
     if not base_url:
-        st.error("GOGO_ANIME_BASE_URL environment variable is not set")
+        st.error("GOGO_ANIME_BASE_URL environment variable is not set. Please check your .env file.")
         return []
     
     api_url = f"{base_url}/get_episodes?id={anime_id}"
@@ -448,7 +441,7 @@ def search_anime(anime_name):
     # Check if the base URL is set
     base_url = os.getenv('GOGO_ANIME_BASE_URL')
     if not base_url:
-        st.error("GOGO_ANIME_BASE_URL environment variable is not set")
+        st.error("GOGO_ANIME_BASE_URL environment variable is not set. Please check your .env file.")
         return []
         
     search_url = f"{base_url}/search?keyword={anime_name.replace(' ', '+')}"
@@ -496,7 +489,7 @@ def get_streaming_url(anime_id, episode_id):
     # Check if the base URL is set
     base_url = os.getenv('GOGO_ANIME_BASE_URL')
     if not base_url:
-        st.error("GOGO_ANIME_BASE_URL environment variable is not set")
+        st.error("GOGO_ANIME_BASE_URL environment variable is not set. Please check your .env file.")
         return None
         
     return f"{base_url}/streaming.php?id={anime_id}&ep={episode_id}&server=hd-1&type=sub"
