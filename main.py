@@ -9,6 +9,32 @@ import os
 # Load environment variables
 load_dotenv()
 
+# Check if required environment variables are set and show guidance if not
+ani_list_url = os.getenv('ANI_LIST_API_URL')
+gogo_anime_url = os.getenv('GOGO_ANIME_BASE_URL')
+
+# Show a warning banner if environment variables are not set
+if not ani_list_url or not gogo_anime_url:
+    st.warning("""
+    **Environment Variables Not Configured**
+    
+    This application requires API endpoints to function properly:
+    
+    1. `ANI_LIST_API_URL` - GraphQL endpoint for anime data
+    2. `GOGO_ANIME_BASE_URL` - Base URL for anime streaming
+    
+    **For Streamlit Cloud Deployment:**
+    - Go to your app settings
+    - Navigate to the "Secrets" section
+    - Add both environment variables with their values
+    
+    **For Local Development:**
+    - Copy `.env.example` to `.env`
+    - Populate with your API endpoint values
+    
+    See README.md for detailed instructions.
+    """)
+
 st.set_page_config(
     page_title="Lucifero - Anime Streamer",
     page_icon=":imp:",
@@ -354,7 +380,7 @@ def get_anilist_trending():
     # Get the API URL from environment variable
     api_url = os.getenv('ANI_LIST_API_URL')
     if not api_url:
-        st.error("ANI_LIST_API_URL environment variable is not set. Please check your .env file.")
+        st.error("ANI_LIST_API_URL environment variable is not set. For Streamlit Cloud deployment, please set this in the Secrets section of your app settings. For local development, copy .env.example to .env and populate the values.")
         return []
     
     try:
@@ -383,7 +409,7 @@ def search_gogoanime(title):
     # Check if the base URL is set
     base_url = os.getenv('GOGO_ANIME_BASE_URL')
     if not base_url:
-        st.error("GOGO_ANIME_BASE_URL environment variable is not set. Please check your .env file.")
+        st.error("GOGO_ANIME_BASE_URL environment variable is not set. For Streamlit Cloud deployment, please set this in the Secrets section of your app settings. For local development, copy .env.example to .env and populate the values.")
         return None
         
     try:
@@ -418,7 +444,7 @@ def get_episodes_from_api(anime_id):
     # Check if the base URL is set
     base_url = os.getenv('GOGO_ANIME_BASE_URL')
     if not base_url:
-        st.error("GOGO_ANIME_BASE_URL environment variable is not set. Please check your .env file.")
+        st.error("GOGO_ANIME_BASE_URL environment variable is not set. For Streamlit Cloud deployment, please set this in the Secrets section of your app settings. For local development, copy .env.example to .env and populate the values.")
         return []
     
     api_url = f"{base_url}/get_episodes?id={anime_id}"
@@ -441,7 +467,7 @@ def search_anime(anime_name):
     # Check if the base URL is set
     base_url = os.getenv('GOGO_ANIME_BASE_URL')
     if not base_url:
-        st.error("GOGO_ANIME_BASE_URL environment variable is not set. Please check your .env file.")
+        st.error("GOGO_ANIME_BASE_URL environment variable is not set. For Streamlit Cloud deployment, please set this in the Secrets section of your app settings. For local development, copy .env.example to .env and populate the values.")
         return []
         
     search_url = f"{base_url}/search?keyword={anime_name.replace(' ', '+')}"
@@ -489,7 +515,7 @@ def get_streaming_url(anime_id, episode_id):
     # Check if the base URL is set
     base_url = os.getenv('GOGO_ANIME_BASE_URL')
     if not base_url:
-        st.error("GOGO_ANIME_BASE_URL environment variable is not set. Please check your .env file.")
+        st.error("GOGO_ANIME_BASE_URL environment variable is not set. For Streamlit Cloud deployment, please set this in the Secrets section of your app settings. For local development, copy .env.example to .env and populate the values.")
         return None
         
     return f"{base_url}/streaming.php?id={anime_id}&ep={episode_id}&server=hd-1&type=sub"

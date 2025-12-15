@@ -4,15 +4,28 @@ A Streamlit-based anime streaming application that fetches trending anime data a
 
 ## Environment Variables Setup
 
-For local development, copy the `.env.example` file to `.env` and populate with your own values:
+This application requires two environment variables to function properly:
+
+1. `ANI_LIST_API_URL` - GraphQL endpoint for anime data (default: https://graphql.anilist.co)
+2. `GOGO_ANIME_BASE_URL` - Base URL for anime streaming (default: https://gogoanime.com.by)
+
+### For Local Development
+
+Copy the `.env.example` file to `.env` and populate with your own values:
 
 ```bash
 cp .env.example .env
 ```
 
-For Streamlit Cloud deployment, you need to set the environment variables in the Streamlit Cloud dashboard:
+Edit the `.env` file and replace the placeholder values with the actual API endpoints.
 
-1. Go to your Streamlit app settings
+**Important:** The `.env` file is included in `.gitignore` and will not be committed to the repository, keeping your configuration secure.
+
+### For Streamlit Cloud Deployment
+
+Streamlit Cloud does not use `.env` files. You must set environment variables in the Streamlit Cloud dashboard:
+
+1. Go to your Streamlit app settings in the Streamlit Cloud dashboard
 2. Navigate to the "Secrets" section
 3. Add the following environment variables:
 
